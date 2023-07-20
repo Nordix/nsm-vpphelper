@@ -20,7 +20,6 @@ package vpphelper
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -78,7 +77,7 @@ func StartAndDialContext(ctx context.Context, opts ...Option) (conn Connection, 
 
 func writeDefaultConfigFiles(ctx context.Context, o *option) error {
 	configFiles := map[string]string{
-		vppConfFilename: fmt.Sprintf(o.vppConfig, o.rootDir),
+		vppConfFilename: NewVPPConfigFile(o.vppConfig, VPPConfigParameters{RootDir: o.rootDir, DataSize: vppDefaultDataSize}),
 	}
 	for filename, contents := range configFiles {
 		filename = filepath.Join(o.rootDir, filename)

@@ -20,9 +20,9 @@ const (
 	vppConfFilename = "/etc/vpp/helper/vpp.conf"
 	vppConfContents = `unix {
   nodaemon
-  log %[1]s/var/log/vpp/vpp.log
+  log {{ .RootDir }}/var/log/vpp/vpp.log
   full-coredump
-  cli-listen %[1]s/var/run/vpp/cli.sock
+  cli-listen {{ .RootDir }}/var/run/vpp/cli.sock
   gid vpp
 }
 
@@ -31,7 +31,7 @@ buffers {
 	buffers-per-numa 32768
 	# data-size was chosen using 4096 page - 256 bytes metadata - one cache line (64 bytes) to just *barely* fit in
 	# one page, since we can't split a buffer across a page.
-	default data-size 3776
+	default data-size {{ .DataSize }}
 }
 
 ## logging {
@@ -60,11 +60,11 @@ api-segment {
 }
 
 socksvr {
-  socket-name %[1]s/var/run/vpp/api.sock
+  socket-name {{ .RootDir }}/var/run/vpp/api.sock
 }
 
 statseg {
-  socket-name %[1]s/var/run/vpp/stats.sock
+  socket-name {{ .RootDir }}/var/run/vpp/stats.sock
 }
 
 cpu {
