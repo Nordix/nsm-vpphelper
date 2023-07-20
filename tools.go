@@ -10,10 +10,10 @@ type VPPConfigParameters struct {
 	RootDir  string
 }
 
-func NewVPPConfigFile(confTemplate string, params VPPConfigParameters) string {
+func NewVPPConfigFile(params VPPConfigParameters) string {
 	vppConfigBuilder := new(strings.Builder)
 
-	t := template.Must(template.New("vppConfig").Parse(confTemplate))
+	t := template.Must(template.New("vppConfig").Parse(vppConfContents))
 	err := t.Execute(vppConfigBuilder, params)
 	if err != nil {
 		panic(err)
