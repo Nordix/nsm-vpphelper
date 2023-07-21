@@ -1,7 +1,7 @@
 package vpphelper_test
 
 import (
-	"github.com/edwarnicke/vpphelper"
+	"github.com/networkservicemesh/vpphelper"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

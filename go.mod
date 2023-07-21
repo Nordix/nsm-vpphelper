@@ -1,4 +1,4 @@
-module github.com/edwarnicke/vpphelper
+module github.com/networkservicemesh/vpphelper
 
 go 1.15
 
