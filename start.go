@@ -43,7 +43,7 @@ type Connection interface {
 func StartAndDialContext(ctx context.Context, opts ...Option) (conn Connection, errCh <-chan error) {
 	o := &option{
 		rootDir:   DefaultRootDir,
-		vppConfig: VppConfContents,
+		vppConfig: DefaultVPPConfTemplate,
 	}
 	for _, opt := range opts {
 		opt(o)

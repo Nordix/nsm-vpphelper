@@ -11,7 +11,7 @@ The following two functional options can also be passed as parameters to the `St
 1. `WithRootDir` : sets the root directory for all `.conf` files
 2. `WithVppConfig` : sets `vpp.conf` file template. All the `%[1]s` in the template will be replaced by the `rootDir`.
 ```go
-conn, vppErrCh := vpphelper.StartAndDialContext(connectCtx, vpphelper.WithRootDir("/tmp/vpp2"), vpphelper.WithVppConfig(newVppConfContents))
+conn, vppErrCh := vpphelper.StartAndDialContext(connectCtx, vpphelper.WithRootDir("/tmp/vpp2"), vpphelper.WithVppConfig(newDefaultVPPConfTemplate))
 ```
 		
-**Note**: `newVppConfContents` variable in above code snippet is a multiline string having `vpp.conf` template. An example of such template is available in `vpp.conf.go`.
+**Note**: `newDefaultVPPConfTemplate` variable in above code snippet is a multiline string having `vpp.conf` template. An example of such template is available in `vpp.conf.go`.

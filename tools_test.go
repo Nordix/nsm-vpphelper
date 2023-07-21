@@ -183,6 +183,6 @@ plugins {
 
 func Test_NewVPPConfigFile(t *testing.T) {
 	require.Equal(t, expectedConfig, vpphelper.NewVPPConfigFile(
-		vpphelper.VppConfContents,
+		vpphelper.DefaultVPPConfTemplate,
 		vpphelper.VPPConfigParameters{DataSize: 500, RootDir: `/root/dir`}))
 }
