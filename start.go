@@ -43,7 +43,7 @@ type Connection interface {
 func StartAndDialContext(ctx context.Context, opts ...Option) (conn Connection, errCh <-chan error) {
 	o := &option{
 		rootDir:   DefaultRootDir,
-		vppConfig: vppConfContents,
+		vppConfig: VppConfContents,
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -77,7 +77,7 @@ func StartAndDialContext(ctx context.Context, opts ...Option) (conn Connection, 
 
 func writeDefaultConfigFiles(ctx context.Context, o *option) error {
 	configFiles := map[string]string{
-		vppConfFilename: NewVPPConfigFile(VPPConfigParameters{RootDir: o.rootDir, DataSize: vppDefaultDataSize}),
+		vppConfFilename: NewVPPConfigFile(o.vppConfig, VPPConfigParameters{RootDir: o.rootDir, DataSize: vppDefaultDataSize}),
 	}
 	for filename, contents := range configFiles {
 		filename = filepath.Join(o.rootDir, filename)

@@ -18,7 +18,7 @@ package vpphelper
 
 const (
 	vppConfFilename = "/etc/vpp/helper/vpp.conf"
-	vppConfContents = `unix {
+	VppConfContents = `unix {
   nodaemon
   log {{ .RootDir }}/var/log/vpp/vpp.log
   full-coredump
