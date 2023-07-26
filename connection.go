@@ -22,11 +22,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"git.fd.io/govpp.git"
-	"git.fd.io/govpp.git/api"
-	"git.fd.io/govpp.git/core"
 	"github.com/edwarnicke/log"
 	"github.com/pkg/errors"
+	"go.fd.io/govpp"
+	"go.fd.io/govpp/api"
+	"go.fd.io/govpp/core"
 	"gopkg.in/fsnotify.v1"
 )
 
