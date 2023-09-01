@@ -26,8 +26,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"git.fd.io/govpp.git/api"
 	"github.com/edwarnicke/exechelper"
+	"go.fd.io/govpp/api"
 
 	"github.com/edwarnicke/log"
 )

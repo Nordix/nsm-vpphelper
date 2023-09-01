@@ -3,10 +3,10 @@ module github.com/networkservicemesh/vpphelper
 go 1.15
 
 require (
-	git.fd.io/govpp.git v0.3.6-0.20210202134006-4c1cccf48cd1
 	github.com/edwarnicke/exechelper v1.0.2
 	github.com/edwarnicke/log v1.0.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.8.0
+	go.fd.io/govpp v0.8.0
 	gopkg.in/fsnotify.v1 v1.4.7
 )
