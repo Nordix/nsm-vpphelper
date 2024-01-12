@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Cisco and/or its affiliates.
+// Copyright (c) 2020-2024 Cisco and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -20,7 +20,6 @@ package vpphelper
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -86,7 +85,7 @@ func writeDefaultConfigFiles(ctx context.Context, o *option) error {
 			if err := os.MkdirAll(path.Dir(filename), 0o700); err != nil {
 				return err
 			}
-			if err := ioutil.WriteFile(filename, []byte(contents), 0o600); err != nil {
+			if err := os.WriteFile(filename, []byte(contents), 0o600); err != nil {
 				return err
 			}
 		}
