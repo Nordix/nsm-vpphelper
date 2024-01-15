@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Cisco and/or its affiliates.
+// Copyright (c) 2020-2024 Cisco and/or its affiliates.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -17,7 +17,9 @@
 package vpphelper
 
 const (
-	vppConfFilename        = "/etc/vpp/helper/vpp.conf"
+	vppConfFilename = "/etc/vpp/helper/vpp.conf"
+
+	// DefaultVPPConfTemplate - template for VPP config
 	DefaultVPPConfTemplate = `unix {
   nodaemon
   log {{ .RootDir }}/var/log/vpp/vpp.log
