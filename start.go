@@ -31,15 +31,9 @@ import (
 	"github.com/edwarnicke/log"
 )
 
-// Connection Combination of api.Connection and api.ChannelProvider
-type Connection interface {
-	api.Connection
-	api.ChannelProvider
-}
-
 // StartAndDialContext - starts vpp
 // Stdout and Stderr for vpp are set to be log.Entry(ctx).Writer().
-func StartAndDialContext(ctx context.Context, opts ...Option) (conn Connection, errCh <-chan error) {
+func StartAndDialContext(ctx context.Context, opts ...Option) (conn api.Connection, errCh <-chan error) {
 	o := &option{
 		rootDir:   DefaultRootDir,
 		vppConfig: DefaultVPPConfTemplate,

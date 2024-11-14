@@ -39,7 +39,7 @@ type connection struct {
 // DialContext - Dials vpp and returns a Connection
 // DialContext is 'lazy' meaning that if there is no socket yet at filename, we will continue to try
 // until there is one or the ctx is canceled.
-func DialContext(ctx context.Context, filename string) Connection {
+func DialContext(ctx context.Context, filename string) api.Connection {
 	c := &connection{
 		ready: make(chan struct{}),
 	}
@@ -100,23 +100,7 @@ func (c *connection) Invoke(ctx context.Context, req, reply api.Message) error {
 	return c.Connection.Invoke(ctx, req, reply)
 }
 
-func (c *connection) NewAPIChannel() (api.Channel, error) {
-	<-c.ready
-	if c.err != nil {
-		return nil, c.err
-	}
-	return c.Connection.NewAPIChannel()
-}
-
-func (c *connection) NewAPIChannelBuffered(reqChanBufSize, replyChanBufSize int) (api.Channel, error) {
-	<-c.ready
-	if c.err != nil {
-		return nil, c.err
-	}
-	return c.Connection.NewAPIChannelBuffered(reqChanBufSize, replyChanBufSize)
-}
-
-var _ Connection = &connection{}
+var _ api.Connection = &connection{}
 
 func waitForSocket(ctx context.Context, filename string) error {
 	watcher, err := fsnotify.NewWatcher()
