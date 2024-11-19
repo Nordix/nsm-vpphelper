@@ -26,6 +26,12 @@ linters-settings:
           - (github.com/sirupsen/logrus.FieldLogger).Warnf
           - (github.com/sirupsen/logrus.FieldLogger).Errorf
           - (github.com/sirupsen/logrus.FieldLogger).Fatalf
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: "errors"
+            desc: "Please use \"github.com/pkg/errors\" instead of \"errors\" in go imports"
   revive:
     confidence: 0.8
     rules:
@@ -49,22 +55,17 @@ linters-settings:
       - name: errorf
       - name: superfluous-else
       - name: unreachable-code
+  goimports:
+    local-prefixes: github.com/networkservicemesh/vpphelper
   gocyclo:
     min-complexity: 15
   dupl:
     threshold: 150
-  funlen:
-    lines: 100
-    statements: 50
   goconst:
     min-len: 2
     min-occurrences: 2
-  depguard:
-    rules:
-      main:
-        deny:
-          - pkg: "errors"
-            desc: "Please use \"github.com/pkg/errors\" instead of \"errors\" in go imports"
+  lll:
+    line-length: 160
   misspell:
     locale: US
   unparam:
@@ -113,10 +114,11 @@ linters-settings:
 linters:
   disable-all: true
   enable:
+    - depguard
+    - revive
+    - rowserrcheck
     - goheader
     - bodyclose
-    - unused
-    - depguard
     - dogsled
     - dupl
     - errcheck
@@ -127,19 +129,19 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - revive
     - gosec
     - gosimple
     - govet
     - ineffassign
+    - lll
     - misspell
     - nakedret
-    - copyloopvar
     - staticcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
+    - unused
     - whitespace
 issues:
   exclude-use-default: false

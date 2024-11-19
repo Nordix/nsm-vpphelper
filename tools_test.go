@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/networkservicemesh/vpphelper"
+
 	"github.com/stretchr/testify/require"
 )
 
