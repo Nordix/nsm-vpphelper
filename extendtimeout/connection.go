@@ -14,8 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package extended - provides a wrapper for vpp connection that uses extended timeout for all vpp operations
-package extended
+// Package extendtimeout - provides a wrapper for vpp connection that uses extended timeout for all vpp operations
+package extendtimeout
 
 import (
 	"context"
