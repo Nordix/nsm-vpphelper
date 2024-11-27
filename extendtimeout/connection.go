@@ -53,10 +53,11 @@ func (c *extendedConnection) withExtendedTimeoutCtx(ctx context.Context) (extend
 	}
 
 	minDeadline := time.Now().Add(c.contextTimeout)
-	if minDeadline.After(deadline) {
-		deadline = minDeadline
-		log.FromContext(ctx).Infof("Context deadline has been increased due to important request(s)")
+	if minDeadline.Before(deadline) {
+		return ctx, func() {}
 	}
+	log.FromContext(ctx).Warn("Context deadline has been extended by extendtimeout from %v to %v", deadline, minDeadline)
+	deadline = minDeadline
 	postponedCtx, cancel := context.WithDeadline(context.Background(), deadline)
 	return extend.WithValuesFromContext(postponedCtx, ctx), cancel
 }
