@@ -35,6 +35,10 @@ type extendedContext struct {
 	valuesContext context.Context
 }
 
+func (ec *extendedContext) Value(key interface{}) interface{} {
+	return ec.valuesContext.Value(key)
+}
+
 // NewConnection - creates a wrapper for vpp connection that uses extended context timeout for all operations
 func NewConnection(vppConn api.Connection, contextTimeout time.Duration) api.Connection {
 	return &extendedConnection{

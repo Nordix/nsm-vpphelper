@@ -8,6 +8,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
 	go.fd.io/govpp v0.10.0-alpha.0.20240110141843-761adec77524
+	go.uber.org/goleak v1.3.0
 	gopkg.in/fsnotify.v1 v1.4.7
 )
 
