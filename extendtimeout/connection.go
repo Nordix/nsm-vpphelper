@@ -21,14 +21,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/networkservicemesh/sdk/pkg/tools/extend"
-	"github.com/networkservicemesh/sdk/pkg/tools/log"
+	"github.com/edwarnicke/log"
 	"go.fd.io/govpp/api"
 )
 
 type extendedConnection struct {
 	api.Connection
 	contextTimeout time.Duration
+}
+
+type extendedContext struct {
+	context.Context
+	valuesContext context.Context
 }
 
 // NewConnection - creates a wrapper for vpp connection that uses extended context timeout for all operations
@@ -56,8 +60,11 @@ func (c *extendedConnection) withExtendedTimeoutCtx(ctx context.Context) (extend
 	if minDeadline.Before(deadline) {
 		return ctx, func() {}
 	}
-	log.FromContext(ctx).Warn("Context deadline has been extended by extendtimeout from %v to %v", deadline, minDeadline)
+	log.Entry(ctx).Warnf("Context deadline has been extended by extendtimeout from %v to %v", deadline, minDeadline)
 	deadline = minDeadline
 	postponedCtx, cancel := context.WithDeadline(context.Background(), deadline)
-	return extend.WithValuesFromContext(postponedCtx, ctx), cancel
+	return &extendedContext{
+		Context:       postponedCtx,
+		valuesContext: ctx,
+	}, cancel
 }
