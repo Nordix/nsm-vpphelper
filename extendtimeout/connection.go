@@ -54,15 +54,38 @@ func (c *extendedConnection) Invoke(ctx context.Context, req, reply api.Message)
 	return err
 }
 
+func (c *extendedConnection) cancelMonitorCtx(ctx context.Context) (cancelMonitorCtx context.Context, cancel func()) {
+	cancelCtx, cancelFunc := context.WithCancel(context.Background())
+	cancelCh := make(chan struct{})
+	go func() {
+		select {
+		case <-time.After(c.contextTimeout):
+			<-ctx.Done()
+		case <-cancelCh:
+		}
+		cancelFunc()
+	}()
+
+	cancelMonitorCtx = &extendedContext{
+		Context:       cancelCtx,
+		valuesContext: ctx,
+	}
+	cancel = func() {
+		cancelCh <- struct{}{}
+		close(cancelCh)
+	}
+	return
+}
+
 func (c *extendedConnection) withExtendedTimeoutCtx(ctx context.Context) (extendedCtx context.Context, cancel func()) {
 	deadline, ok := ctx.Deadline()
 	if !ok {
-		return ctx, func() {}
+		return c.cancelMonitorCtx(ctx)
 	}
 
 	minDeadline := time.Now().Add(c.contextTimeout)
 	if minDeadline.Before(deadline) {
-		return ctx, func() {}
+		return c.cancelMonitorCtx(ctx)
 	}
 	log.Entry(ctx).Warnf("Context deadline has been extended by extendtimeout from %v to %v", deadline, minDeadline)
 	deadline = minDeadline

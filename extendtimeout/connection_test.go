@@ -62,10 +62,8 @@ func TestSmallTimeout(t *testing.T) {
 
 func TestBigTimeout(t *testing.T) {
 	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		deadline, ok := ctx.Deadline()
-		require.True(t, ok)
-		timeout := time.Until(deadline)
-		require.Greater(t, timeout, 7*time.Second)
+		_, ok := ctx.Deadline()
+		require.False(t, ok)
 		require.Equal(t, ctx.Value(&key{}), value)
 	}}
 
@@ -77,18 +75,7 @@ func TestBigTimeout(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestNoTimeout(t *testing.T) {
-	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		_, ok := ctx.Deadline()
-		require.False(t, ok)
-	}}
-
-	emptyCtx := context.Background()
-	err := extendtimeout.NewConnection(testConn, 2*time.Second).Invoke(emptyCtx, nil, nil)
-	require.NoError(t, err)
-}
-
-func TestCanceledContext(t *testing.T) {
+func TestOriginalContextExtendedAndCanceled(t *testing.T) {
 	t.Cleanup(func() {
 		goleak.VerifyNone(t)
 	})
@@ -112,6 +99,71 @@ func TestCanceledContext(t *testing.T) {
 	}()
 
 	cancel()
+	time.Sleep(50 * time.Millisecond)
+	ch <- struct{}{}
+
+	require.Eventually(t, func() bool {
+		return counter.Load() == 1
+	}, time.Second, 100*time.Millisecond)
+}
+
+func TestOriginalContextNotExtendedAndCanceled(t *testing.T) {
+	t.Cleanup(func() {
+		goleak.VerifyNone(t)
+	})
+
+	counter := new(atomic.Int32)
+	ch := make(chan struct{}, 1)
+	defer close(ch)
+	testConn := &testConn{invokeBody: func(ctx context.Context) {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ch:
+			counter.Add(1)
+		}
+	}}
+
+	cancelCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	go func() {
+		err := extendtimeout.NewConnection(testConn, 5*time.Second).Invoke(cancelCtx, nil, nil)
+		require.NoError(t, err)
+	}()
+
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	ch <- struct{}{}
+
+	require.Eventually(t, func() bool {
+		return counter.Load() == 1
+	}, time.Second, 100*time.Millisecond)
+}
+
+func TestOriginalContextNoTimeoutAndCanceled(t *testing.T) {
+	t.Cleanup(func() {
+		goleak.VerifyNone(t)
+	})
+
+	counter := new(atomic.Int32)
+	ch := make(chan struct{}, 1)
+	defer close(ch)
+	testConn := &testConn{invokeBody: func(ctx context.Context) {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ch:
+			counter.Add(1)
+		}
+	}}
+
+	cancelCtx, cancel := context.WithCancel(context.Background())
+	go func() {
+		err := extendtimeout.NewConnection(testConn, 10*time.Second).Invoke(cancelCtx, nil, nil)
+		require.NoError(t, err)
+	}()
+
+	cancel()
+	time.Sleep(50 * time.Millisecond)
 	ch <- struct{}{}
 
 	require.Eventually(t, func() bool {
