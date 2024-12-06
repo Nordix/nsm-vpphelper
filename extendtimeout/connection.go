@@ -21,22 +21,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/edwarnicke/log"
 	"go.fd.io/govpp/api"
 )
 
 type extendedConnection struct {
 	api.Connection
 	contextTimeout time.Duration
-}
-
-type extendedContext struct {
-	context.Context
-	valuesContext context.Context
-}
-
-func (ec *extendedContext) Value(key interface{}) interface{} {
-	return ec.valuesContext.Value(key)
 }
 
 // NewConnection - creates a wrapper for vpp connection that uses extended context timeout for all operations
@@ -48,27 +38,26 @@ func NewConnection(vppConn api.Connection, contextTimeout time.Duration) api.Con
 }
 
 func (c *extendedConnection) Invoke(ctx context.Context, req, reply api.Message) error {
-	ctx, cancel := c.withExtendedTimeoutCtx(ctx)
+	ctx, cancel := c.withExtendedTimeoutContext(ctx)
 	err := c.Connection.Invoke(ctx, req, reply)
 	cancel()
 	return err
 }
 
-func (c *extendedConnection) withExtendedTimeoutCtx(ctx context.Context) (extendedCtx context.Context, cancel func()) {
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return ctx, func() {}
-	}
+func (c *extendedConnection) withExtendedTimeoutContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	var cancelContext, cancel = context.WithCancel(context.Background())
+	var timeoutContext, timeoutCancel = context.WithTimeout(cancelContext, c.contextTimeout)
+	go func() {
+		<-timeoutContext.Done()
+		timeoutCancel()
+		select {
+		case <-cancelContext.Done():
+			return
+		case <-ctx.Done():
+			cancel()
+			return
+		}
+	}()
 
-	minDeadline := time.Now().Add(c.contextTimeout)
-	if minDeadline.Before(deadline) {
-		return ctx, func() {}
-	}
-	log.Entry(ctx).Warnf("Context deadline has been extended by extendtimeout from %v to %v", deadline, minDeadline)
-	deadline = minDeadline
-	postponedCtx, cancel := context.WithDeadline(context.Background(), deadline)
-	return &extendedContext{
-		Context:       postponedCtx,
-		valuesContext: ctx,
-	}, cancel
+	return cancelContext, cancel
 }

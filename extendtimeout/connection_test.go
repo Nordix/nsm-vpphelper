@@ -39,56 +39,7 @@ func (c *testConn) Invoke(ctx context.Context, req, reply api.Message) error {
 	return nil
 }
 
-type key struct{}
-
-const value = "value"
-
-func TestSmallTimeout(t *testing.T) {
-	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		deadline, ok := ctx.Deadline()
-		require.True(t, ok)
-		timeout := time.Until(deadline)
-		require.Greater(t, timeout, time.Second)
-		require.Equal(t, ctx.Value(&key{}), value)
-	}}
-
-	smallCtx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
-	smallCtx = context.WithValue(smallCtx, &key{}, value)
-	defer cancel()
-
-	err := extendtimeout.NewConnection(testConn, 2*time.Second).Invoke(smallCtx, nil, nil)
-	require.NoError(t, err)
-}
-
-func TestBigTimeout(t *testing.T) {
-	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		deadline, ok := ctx.Deadline()
-		require.True(t, ok)
-		timeout := time.Until(deadline)
-		require.Greater(t, timeout, 7*time.Second)
-		require.Equal(t, ctx.Value(&key{}), value)
-	}}
-
-	bigCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	bigCtx = context.WithValue(bigCtx, &key{}, value)
-	defer cancel()
-
-	err := extendtimeout.NewConnection(testConn, 2*time.Second).Invoke(bigCtx, nil, nil)
-	require.NoError(t, err)
-}
-
-func TestNoTimeout(t *testing.T) {
-	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		_, ok := ctx.Deadline()
-		require.False(t, ok)
-	}}
-
-	emptyCtx := context.Background()
-	err := extendtimeout.NewConnection(testConn, 2*time.Second).Invoke(emptyCtx, nil, nil)
-	require.NoError(t, err)
-}
-
-func TestCanceledContext(t *testing.T) {
+func TestOriginalContextCanceled(t *testing.T) {
 	t.Cleanup(func() {
 		goleak.VerifyNone(t)
 	})
@@ -105,16 +56,18 @@ func TestCanceledContext(t *testing.T) {
 		}
 	}}
 
-	cancelCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	cancelCtx, cancel := context.WithCancel(context.Background())
+
 	go func() {
-		err := extendtimeout.NewConnection(testConn, 20*time.Second).Invoke(cancelCtx, nil, nil)
+		err := extendtimeout.NewConnection(testConn, 10*time.Second).Invoke(cancelCtx, nil, nil)
 		require.NoError(t, err)
 	}()
 
 	cancel()
+	time.Sleep(50 * time.Millisecond)
 	ch <- struct{}{}
 
 	require.Eventually(t, func() bool {
 		return counter.Load() == 1
-	}, time.Second, 100*time.Millisecond)
+	}, 200*time.Millisecond, 10*time.Millisecond)
 }
