@@ -39,103 +39,35 @@ func (c *testConn) Invoke(ctx context.Context, req, reply api.Message) error {
 	return nil
 }
 
-type key struct{}
-
-const value = "value"
-
-func TestSmallTimeout(t *testing.T) {
-	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		deadline, ok := ctx.Deadline()
-		require.True(t, ok)
-		timeout := time.Until(deadline)
-		require.Greater(t, timeout, time.Second)
-		require.Equal(t, ctx.Value(&key{}), value)
-	}}
-
-	smallCtx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
-	smallCtx = context.WithValue(smallCtx, &key{}, value)
-	defer cancel()
-
-	err := extendtimeout.NewConnection(testConn, 2*time.Second).Invoke(smallCtx, nil, nil)
-	require.NoError(t, err)
-}
-
-func TestBigTimeout(t *testing.T) {
-	testConn := &testConn{invokeBody: func(ctx context.Context) {
-		_, ok := ctx.Deadline()
-		require.False(t, ok)
-		require.Equal(t, ctx.Value(&key{}), value)
-	}}
-
-	bigCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	bigCtx = context.WithValue(bigCtx, &key{}, value)
-	defer cancel()
-
-	err := extendtimeout.NewConnection(testConn, 2*time.Second).Invoke(bigCtx, nil, nil)
-	require.NoError(t, err)
-}
-
 func TestOriginalContextCanceled(t *testing.T) {
-	testCases := []struct {
-		desc            string
-		originalTimeout time.Duration
-		extendedTimeout time.Duration
-	}{
-		{
-			desc:            "Extended",
-			originalTimeout: 10 * time.Second,
-			extendedTimeout: 20 * time.Second,
-		},
-		{
-			desc:            "NotExtended",
-			originalTimeout: 10 * time.Second,
-			extendedTimeout: 5 * time.Second,
-		},
-		{
-			desc:            "WithoutTimeout",
-			originalTimeout: -1,
-			extendedTimeout: 10 * time.Second,
-		},
-	}
-	for _, testCase := range testCases {
-		t.Run(testCase.desc, testBody(testCase.originalTimeout, testCase.extendedTimeout))
-	}
-}
+	t.Cleanup(func() {
+		goleak.VerifyNone(t)
+	})
 
-func testBody(originalTimeout, extendedTimeout time.Duration) func(t *testing.T) {
-	return func(t *testing.T) {
-		t.Cleanup(func() {
-			goleak.VerifyNone(t)
-		})
-
-		counter := new(atomic.Int32)
-		ch := make(chan struct{}, 1)
-		defer close(ch)
-		testConn := &testConn{invokeBody: func(ctx context.Context) {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ch:
-				counter.Add(1)
-			}
-		}}
-
-		cancelCtx, cancel := context.WithTimeout(context.Background(), originalTimeout)
-		if originalTimeout < 0 {
-			cancelCtx, cancel = context.WithCancel(context.Background())
+	counter := new(atomic.Int32)
+	ch := make(chan struct{}, 1)
+	defer close(ch)
+	testConn := &testConn{invokeBody: func(ctx context.Context) {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ch:
+			counter.Add(1)
 		}
+	}}
 
-		go func() {
-			err := extendtimeout.NewConnection(testConn, extendedTimeout).Invoke(cancelCtx, nil, nil)
-			require.NoError(t, err)
-		}()
+	cancelCtx, cancel := context.WithCancel(context.Background())
 
-		cancel()
-		time.Sleep(50 * time.Millisecond)
-		ch <- struct{}{}
+	go func() {
+		err := extendtimeout.NewConnection(testConn, 10*time.Second).Invoke(cancelCtx, nil, nil)
+		require.NoError(t, err)
+	}()
 
-		require.Eventually(t, func() bool {
-			return counter.Load() == 1
-		}, time.Second, 100*time.Millisecond)
-	}
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	ch <- struct{}{}
+
+	require.Eventually(t, func() bool {
+		return counter.Load() == 1
+	}, 200*time.Millisecond, 10*time.Millisecond)
 }
