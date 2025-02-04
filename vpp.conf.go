@@ -1,4 +1,5 @@
 // Copyright (c) 2020-2024 Cisco and/or its affiliates.
+// Copyright (c) 2025 OpenInfra Foundation Europe.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
