@@ -19,7 +19,8 @@
 package vpphelper
 
 const (
-	// data-size was chosen using 4096 page - 256 bytes metadata - one cache line (64 bytes) to just *barely* fit in
-	// one page, since we can't split a buffer across a page.
-	vppDefaultDataSize = 3776
+	// For data-size the default 2048 was chosen because with the previous 3776 only
+	// 520 buffers were allocated in a pool on VPP v24.10 as a result of buffer pool
+	// allocation improvements.
+	vppDefaultDataSize = 2048
 )
