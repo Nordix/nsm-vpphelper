@@ -1,4 +1,5 @@
 // Copyright (c) 2020-2024 Cisco and/or its affiliates.
+// Copyright (c) 2025 OpenInfra Foundation Europe.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -31,8 +32,9 @@ const (
 buffers {
 	# buffers-per-numa was chosen as 256 buffers/interface * 128 possible interfaces
 	buffers-per-numa 32768
-	# data-size was chosen using 4096 page - 256 bytes metadata - one cache line (64 bytes) to just *barely* fit in
-	# one page, since we can't split a buffer across a page.
+	# For data-size the default 2048 was chosen because with the previous 3776 only
+	# 520 buffers were allocated in a pool on VPP v24.10 as a result of buffer pool
+	# allocation improvements.
 	default data-size {{ .DataSize }}
 }
 
